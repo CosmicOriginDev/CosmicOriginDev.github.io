@@ -1,21 +1,11 @@
 import { Component, Input, signal } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
-
-@Component({
-  selector: 'project',
-  standalone: true, // Marking as standalone
-  templateUrl: './templates/project_template.html' // Path to the external HTML template
-})
-export class Project {
-  @Input() project_name!: string;
-  @Input()  project_start!: string;
-  @Input()  project_end!: string;
-  @Input()  project_description!: string;
-}
+import 'zone.js';
+import {Project} from './templates/project/project_component'
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, Project], // Importing the standalone Project component
+  standalone: true,
+  imports: [Project], // Importing the standalone Project component
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
