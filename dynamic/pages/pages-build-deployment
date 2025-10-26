@@ -1,0 +1,78 @@
+name: Build and deploy Angular to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-upload:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Angular app
+        run: npm run build -- --configuration=production
+
+      - name: Prepare Pages artifact (move dist contents into public and add .nojekyll)
+        run: |
+          set -euo pipefail
+          echo "Preparing artifact..."
+          if [ ! -d dist ]; then
+            echo "Error: dist folder not found after build" >&2
+            ls -la
+            exit 1
+          fi
+          rm -rf public || true
+          mkdir -p public
+          # If dist contains a single subdirectory (common for Angular), copy its contents into public
+          entries=(dist/*)
+          if [ ${#entries[@]} -eq 1 ] && [ -d "${entries[0]}" ]; then
+            echo "Detected single directory under dist: ${entries[0]}. Copying its contents into public"
+            cp -a "${entries[0]}/." public/
+          else
+            echo "Copying dist/ contents into public"
+            cp -a dist/. public/
+          fi
+          # Ensure no Jekyll processing
+          touch public/.nojekyll
+          ls -la public | sed -n '1,200p'
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v1
+        with:
+          path: public
+
+  deploy:
+    needs: build-and-upload
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+
+    steps:
+      - name: Configure Pages
+        uses: actions/configure-pages@v3
+
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v1
+
+
+# Notes:
+# - This workflow replaces any Jekyll-based build step. It builds the Angular app using npm and ensures the artifact root contains a .nojekyll file so Pages will not run Jekyll.
+# - If your Angular CLI outputs to a different directory, adjust the build command or the paths accordingly.
+# - The job triggers on pushes to the main branch. Update the trigger if you deploy from a different branch.
