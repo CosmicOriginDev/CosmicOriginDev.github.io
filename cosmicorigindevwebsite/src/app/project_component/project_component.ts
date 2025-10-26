@@ -2,8 +2,7 @@ import { Component } from '@angular/core';
 
 @Component({
   selector: 'project',
-  template_url: 'project_template.html', // Path to the external HTML template
-  style_urls: ['style.css']
+  templateUrl: 'project_template.html', // Path to the external HTML template
 })
 export class ProjectComponent {
   project_name = 'Predatorbot Game';
